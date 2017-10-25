@@ -37,7 +37,7 @@ class EWrapper(wrapper.EWrapper):
 
     def price_table_get(self):
         with self.lock:
-            return self._price_table
+            return self._price_table.sort_values(['Strike'], ascending='False')
 
     def price_table_get_indexed(self, index, column):
         with self.lock:
@@ -53,9 +53,9 @@ class EWrapper(wrapper.EWrapper):
             tickerId_index = tickerId_bool[tickerId_bool].index
             return tickerId_index
 
-    def price_table_sort(self):
-        with self.lock:
-            self._price_table = self._price_table.sort_values(['Strike'], ascending='False')
+    # def price_table_sort(self):
+    #     with self.lock:
+    #         self._price_table = self._price_table.sort_values(['Strike'], ascending='False')
 
     def wait_price_filling(self, tickers):
         allpriced = False

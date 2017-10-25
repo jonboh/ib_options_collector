@@ -10,11 +10,25 @@ from ibapi import contract
 
 
 class ib_option_collector(object):
-    def __init__(self, sub_limit=90, twsport=7496, client_id=1):
-        self.twsport = twsport
-        self.subscription_limit = sub_limit
-        self.client_number = client_id
+    def __init__(self, underlyin_contract: contract, expiration: int, sub_limit=90, sub_float=10, twsport=7496,
+                 client_id=1):
+        # CONTRACTS
+        self.underlyingcontract = underlyin_contract
         self.under_price_ticker = 1000
+        self.opt_gen_contract = contract.Contract()
+        self.opt_gen_contract.symbol = self.underlyingcontract.symbol
+        self.opt_gen_contract.lastTradeDateOrContractMonth = expiration
+        self.opt_gen_contract.secType = "OPT"
+        self.opt_gen_contract.exchange = "SMART"
+        self.opt_gen_contract.currency = self.underlyingcontract.currency
+        self.opt_gen_contract.multiplier = "100"
+
+        # CONNECTION SETTINGS
+        self.subscription_limit = sub_limit
+        self.sub_float = sub_float
+        self.twsport = twsport
+        self.client_number = client_id
+
         # Wrapper, Client and Subscriber Declaration.
         self.wrapperObj = wrapper_impl.EWrapper()
         self.clientObj = client_impl.EClient(self.wrapperObj)
@@ -26,23 +40,10 @@ class ib_option_collector(object):
         while not self.clientObj.isConnected():
             time.sleep(1)
         print('CONNECTED')
-
-    def define_underlying(self, symbol="SPY", secType="STK", conId=756733, exchange="SMART"):
-        # Underlying Declaration
-        self.underlyingcontract = contract.Contract()
-        self.underlyingcontract.symbol = symbol
-        self.underlyingcontract.secType = secType
-        self.underlyingcontract.conId = conId
-        self.underlyingcontract.exchange = exchange
-
-    def define_generic_option(self, expiration: int):
-        self.opt_gen_contract = contract.Contract()
-        self.opt_gen_contract.symbol = self.underlyingcontract.symbol
-        self.opt_gen_contract.lastTradeDateOrContractMonth = expiration
-        self.opt_gen_contract.secType = "OPT"
-        self.opt_gen_contract.exchange = "SMART"
-        self.opt_gen_contract.currency = "USD"
-        self.opt_gen_contract.multiplier = "100"
+        self.request_generic_info()
+        self.request_chain_info()
+        self.run()
+        print("Options Collector execution complete. Collection currently running...")
 
     def request_generic_info(self):
         # Request Option Chain Details for Underlying
@@ -57,7 +58,7 @@ class ib_option_collector(object):
         info_req_id = self.clientObj.reqContractDetails_cust(0, self.opt_gen_contract)
         # Wait for the request to be filled
         while not self.wrapperObj.info_request_dict[info_req_id]:
-            pass
+            time.sleep(1)
 
     def __client_runner(self):
         self.clientObj.run()
@@ -77,10 +78,8 @@ class ib_option_collector(object):
                 np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Ask')):
             time.sleep(3)
         print('underlying price in place')
-        # HERE WE NEED TO DECIDE THE WAY IN WHICH THE SUBSCRIPTION IS ORDERED, PERMANENT and FLOAT
-        float_groups = 10
         self.subscriberObj.define_subscription(self.under_price_ticker, self.opt_gen_contract, [],
-                                               self.wrapperObj.expiration_strikes, float_groups)
+                                               self.wrapperObj.expiration_strikes, self.sub_float)
         self.subscription_thread = Thread(target=self.__subscriber_runner, name='Subscription Runner')
         self.subscription_thread.start()
 
@@ -89,13 +88,5 @@ class ib_option_collector(object):
         while self.subscriberObj.active:
             time.sleep(1)
 
-    def default_execution(self, expiration):
-        self.define_underlying()
-        self.request_generic_info()
-        print(self.clientObj.wrapper.available_expirations)
-        self.define_generic_option(expiration=expiration)
-        self.request_chain_info()
-        self.run()
-        time.sleep(30)
-        self.wrapperObj.price_table_sort()
-        print("Options Collector execution complete. Collection currently running...")
+    def retrieve_option_chain(self):
+        return self.wrapperObj.price_table_get()
