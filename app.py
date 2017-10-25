@@ -24,7 +24,7 @@ class ib_option_collector(object):
         client_thread = Thread(target=self.__client_runner, name='IB Client Runner')
         client_thread.start()
         while not self.clientObj.isConnected():
-            pass
+            time.sleep(1)
         print('CONNECTED')
 
     def define_underlying(self, symbol="SPY", secType="STK", conId=756733, exchange="SMART"):
@@ -67,7 +67,7 @@ class ib_option_collector(object):
             self.subscriberObj.run()
         else:
             print('No Subscription Configuration in the Subscriber Object')
-            raise exceptions.Error
+            raise ValueError
 
     def run(self):
         # Subscribe to Underlying Price Feed
@@ -87,7 +87,7 @@ class ib_option_collector(object):
     def clear_all_subscriptions(self):
         self.subscriberObj.exit_trigger = True  # The subscriber is the one charged with the cancelation of the subscriptions
         while self.subscriberObj.active:
-            pass
+            time.sleep(1)
 
     def default_execution(self, expiration):
         self.define_underlying()
