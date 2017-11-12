@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import time
 
 from ibapi import contract
 
@@ -97,7 +98,7 @@ class optchain_subscriber(object):
             for i in range(0, len(self.floatsub)):
                 self.subscribe_strikelist(self.floatsub_id[i], self.floatsub[i])
             while not self.exit_trigger:
-                pass  # just wait for the exit trigger
+                time.sleep(0.5)  # just wait for the exit trigger
             self.exit()
 
     def exit(self):

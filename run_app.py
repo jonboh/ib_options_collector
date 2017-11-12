@@ -2,7 +2,7 @@ import time
 
 from ibapi import contract
 
-import app
+import ib_options_collector as col
 
 
 underlying = contract.Contract()
@@ -12,7 +12,7 @@ underlying.exchange = "SMART"
 underlying.secType = "STK"
 underlying.currency = "USD"
 
-collector = app.ib_option_collector(underlying, 20171124)
+collector = col.ib_option_collector(underlying, 20171124)
 
 time.sleep(15)
 
