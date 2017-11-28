@@ -36,8 +36,7 @@ class EWrapper(wrapper.EWrapper):
             'RefreshDate': []}, index=[])  # TickerId is the index
 
     def price_table_get(self):
-        with self.lock:
-            return self._price_table.sort_values(['Strike'], ascending='False')
+        return self._price_table.sort_values(['Strike'], ascending='False')
 
     def price_table_get_indexed(self, index, column):
         with self.lock:
