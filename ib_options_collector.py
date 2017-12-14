@@ -72,7 +72,7 @@ class ib_option_collector(object):
 
     def run(self):
         # Subscribe to Underlying Price Feed
-        self.clientObj.reqMktData_cust(0, self.under_price_ticker, self.underlyingcontract, "225", False, False, [])
+        self.clientObj.reqMktData_cust(0, self.under_price_ticker, self.underlyingcontract, "225,456", False, False, [])
         print('waiting for underlying price')
         while np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Bid')) or \
                 np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Ask')):

@@ -32,6 +32,7 @@ class EWrapper(wrapper.EWrapper):
             'BidPriced': [],
             'AskPriced': [],
             'Expiration': [],
+            'CashDivDate': [],
             'CashDiv': [],
             'RefreshDate': []}, index=[])  # TickerId is the index
 
@@ -61,8 +62,10 @@ class EWrapper(wrapper.EWrapper):
         while not allpriced:
             with self.lock:
                 allpriced = (
-                all(np.logical_not(self._price_table[self._price_table.loc[:, 'Active']].loc[tickers, 'BidPriced'])) and
-                all(np.logical_not(self._price_table[self._price_table.loc[:, 'Active']].loc[tickers, 'AskPriced'])))
+                    all(np.logical_not(
+                        self._price_table[self._price_table.loc[:, 'Active']].loc[tickers, 'BidPriced'])) and
+                    all(np.logical_not(
+                        self._price_table[self._price_table.loc[:, 'Active']].loc[tickers, 'AskPriced'])))
             time.sleep(1)  # Sleep to avoid unnecessarily locking the price_table
         return True
 
@@ -80,6 +83,14 @@ class EWrapper(wrapper.EWrapper):
         elif tickType == 4:
             self.price_table_set(indexor, 'Last', price)
         self.price_table_set(indexor, 'RefreshDate', datetime.datetime.now())
+
+    def tickString(self, reqId: TickerId, tickType: TickType, value: str):
+        super().tickString(reqId, tickType, value)
+        if tickType == 59:  # IB Dividends
+            indexor = self.price_table_ticker(reqId)
+            div_list = value.split(',')
+            self.price_table_set(indexor, 'CashDivDate', div_list[-2])
+            self.price_table_set(indexor, 'CashDiv', float(div_list[-1]))
 
     def tickOptionComputation(self, reqId: TickerId, tickType: TickType,
                               impliedVol: float, delta: float, optPrice: float, pvDividend: float,
