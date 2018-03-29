@@ -57,6 +57,10 @@ class EWrapper(wrapper.EWrapper):
     #     with self.lock:
     #         self._price_table = self._price_table.sort_values(['Strike'], ascending='False')
 
+    def clear_options_price_table(self):
+        with self.lock:
+            self._price_table = self._price_table[:1]
+
     def wait_price_filling(self, tickers):
         allpriced = False
         while not allpriced:

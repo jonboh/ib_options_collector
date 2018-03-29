@@ -44,6 +44,7 @@ class optchain_subscriber(object):
 
     def run(self):
         self.active = True
+        self.exit_trigger = False
         # Initialize permanent subscription
         self.subscribe_strikelist(self.permanentsub_id, self.permanentsub)
         # Start with the (last) group so that it can be properly canceled by the first one
@@ -63,6 +64,7 @@ class optchain_subscriber(object):
             for i in range(0, len(self.floatsub_id) - excluded_groups):
                 if self.exit_trigger:
                     self.exit()
+                    return
                 concurrent_subs = concurrent_subs + 1
                 self.floatsub_helper[i] = True
                 self.subscribe_strikelist(self.floatsub_id[i], self.floatsub[i])
@@ -71,6 +73,7 @@ class optchain_subscriber(object):
             for i in range(concurrent_subs + 1, self.float_groups):
                 if self.exit_trigger:
                     self.exit()
+                    return
                 self.floatsub_helper[i - concurrent_subs - 1] = False
                 self.cancel_sub_strikelist(self.floatsub_id[
                                                i - concurrent_subs - 1])  # cancel previous sub group, not the entire float subscription
@@ -92,6 +95,7 @@ class optchain_subscriber(object):
                     self.subscribe_strikelist(self.floatsub_id[i], self.floatsub[i])  # subscribe new strikes
                     self.clientObj.wrapper.wait_price_filling(self.floatsub_id[i])
             self.exit()
+            return
         else:  # Less strikes than subscription_limit
             print('COMPLETE CHAIN SUBSCRIBED')
             self.subscribe_strikelist(self.permanentsub_id, self.permanentsub)
@@ -100,15 +104,18 @@ class optchain_subscriber(object):
             while not self.exit_trigger:
                 time.sleep(0.5)  # just wait for the exit trigger
             self.exit()
+            return
 
     def exit(self):
         self.cancel_sub_strikelist(self.permanentsub_id)
         for i in range(0, self.float_groups):  # loop around float subscriptions
             self.cancel_sub_strikelist(self.floatsub_id[i])
-        if np.all(np.logical_not(self.clientObj.wrapper.price_table_get().Active)):
+        if np.all(np.logical_not(self.clientObj.wrapper.price_table_get().Active[1:])):
             print('All Subscriptions Canceled')
         else:
             print('Not all subs canceled. ERROR')
+        self.clientObj.wrapper.clear_options_price_table()
+        self.clientObj.wrapper.expiration_strikes = []
         self.active = False
 
     def subscribe_strikelist(self, ticker_ids, strikes):
