@@ -76,7 +76,6 @@ class ib_option_collector(object):
         self.opt_gen_contract.currency = self.underlyingcontract.currency
         self.opt_gen_contract.multiplier = "100"
 
-        self.request_generic_info()
         self.request_chain_info()
 
         self.run_subscription()
@@ -90,7 +89,7 @@ class ib_option_collector(object):
     def clear_all_subscriptions(self):
         self.subscriberObj.exit_trigger = True  # The subscriber is the one charged with the cancelation of the subscriptions
         while self.subscriberObj.active:
-            time.sleep(1)
+            time.sleep(0.25)
 
     def retrieve_option_chain(self):
         return self.wrapperObj.price_table_get()
@@ -98,12 +97,8 @@ class ib_option_collector(object):
     def disconnect_chain(self):
         self.subscriberObj.exit_trigger = True
         while self.subscriberObj.active:
-            time.sleep(0.5)
-        a = 1
+            time.sleep(0.25)
 
     def destroy(self):
         self.disconnect_chain()
         self.clientObj.disconnect()
-        self.subscriberObj.exit_trigger = True
-        while self.subscriberObj.active:
-            time.sleep(0.5)
