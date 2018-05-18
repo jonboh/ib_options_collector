@@ -14,12 +14,10 @@ underlying.currency = "USD"
 
 collector = col.ib_option_collector(underlying, 20180525)
 
-time.sleep(5)
-
-print(collector.retrieve_option_chain())
-
-input('Press to disconnect...')
-
+time.sleep(2)
 collector.disconnect_chain()
+print('First chain done')
 
-print('Main Thread: Im done')
+collector.change_subscription(20180601)
+time.sleep(2)
+print(collector.retrieve_option_chain())

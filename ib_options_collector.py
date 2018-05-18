@@ -42,8 +42,14 @@ class ib_option_collector(object):
         print('CONNECTED')
         self.request_generic_info()
         self.request_chain_info()
-        print("Options Collector execution complete. Collection currently running...")
-        self.run()
+        # Subscribe to Underlying Price Feed
+        self.clientObj.reqMktData_cust(0, self.under_price_ticker, self.underlyingcontract, "225,456", False, False, [])
+        print('waiting for underlying price')
+        while np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Bid')) or \
+                np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Ask')):
+            time.sleep(3)
+        print('underlying price in place')
+        self.run_subscription()
 
     def request_generic_info(self):
         # Request Option Chain Details for Underlying
@@ -70,14 +76,23 @@ class ib_option_collector(object):
             print('No Subscription Configuration in the Subscriber Object')
             raise ValueError
 
-    def run(self):
-        # Subscribe to Underlying Price Feed
-        self.clientObj.reqMktData_cust(0, self.under_price_ticker, self.underlyingcontract, "225,456", False, False, [])
-        print('waiting for underlying price')
-        while np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Bid')) or \
-                np.isnan(self.clientObj.wrapper.price_table_get_indexed(self.under_price_ticker, 'Ask')):
-            time.sleep(3)
-        print('underlying price in place')
+    def change_subscription(self, expiration):
+        # CONTRACTS
+        self.opt_gen_contract = contract.Contract()
+        self.opt_gen_contract.symbol = self.underlyingcontract.symbol
+        self.opt_gen_contract.lastTradeDateOrContractMonth = expiration
+        self.opt_gen_contract.secType = "OPT"
+        self.opt_gen_contract.exchange = "SMART"
+        self.opt_gen_contract.currency = self.underlyingcontract.currency
+        self.opt_gen_contract.multiplier = "100"
+
+        self.request_generic_info()
+        self.request_chain_info()
+
+        self.run_subscription()
+
+
+    def run_subscription(self):
         self.subscriberObj.define_subscription(self.under_price_ticker, self.opt_gen_contract, [],
                                                self.wrapperObj.expiration_strikes, self.sub_float)
         self.subscription_thread = Thread(target=self.__subscriber_runner, name='Subscription Runner')
@@ -97,8 +112,8 @@ class ib_option_collector(object):
             time.sleep(0.5)
         a = 1
 
-
     def destroy(self):
+        self.disconnect_chain()
         self.clientObj.disconnect()
         self.subscriberObj.exit_trigger = True
         while self.subscriberObj.active:
