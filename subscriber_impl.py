@@ -135,7 +135,6 @@ class optchain_subscriber(object):
         for i in range(0, len(ticker_ids)):
             if self.clientObj.wrapper.price_table_get_indexed(ticker_ids[i], 'Active'):
                 self.clientObj.cancelMktData_cust(0, ticker_ids[i])
-
             else:
                 # print("Cancel Sub SKIPPED")
                 pass
