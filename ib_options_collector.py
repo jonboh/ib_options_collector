@@ -58,13 +58,13 @@ class ib_option_collector(object):
                                                              self.underlyingcontract.conId)
         # Wait for the request to be filled
         while not self.wrapperObj.info_request_dict[info_req_id]:
-            pass
+            time.sleep(0.25)
 
     def request_chain_info(self):
         info_req_id = self.clientObj.reqContractDetails_cust(0, self.opt_gen_contract)
         # Wait for the request to be filled
         while not self.wrapperObj.info_request_dict[info_req_id]:
-            time.sleep(1)
+            time.sleep(0.25)
 
     def change_subscription(self, expiration):
         # CONTRACTS
