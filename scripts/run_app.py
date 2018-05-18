@@ -2,7 +2,7 @@ import time
 
 from ibapi import contract
 
-import ib_options_collector as col
+import options_collector as col
 
 
 underlying = contract.Contract()
