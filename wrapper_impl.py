@@ -65,7 +65,7 @@ class EWrapper(wrapper.EWrapper):
 
     def clear_options_price_table(self):
         with self.lock:
-            self._price_table = self._price_table[:1]
+            self._price_table = self._price_table[:0]
 
     def wait_price_filling(self, tickers):
         allpriced = False

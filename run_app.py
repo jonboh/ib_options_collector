@@ -12,12 +12,13 @@ underlying.exchange = "SMART"
 underlying.secType = "STK"
 underlying.currency = "USD"
 
-collector = col.ib_option_collector(underlying, 20180525)
+collector = col.ib_option_collector()
+collector.subscription(underlying, 20180525)
 
 time.sleep(2)
-collector.disconnect_chain()
+collector.disconnect_subscription()
 print('First chain done')
 
-collector.change_subscription(20180601)
+collector.subscription(underlying, 20180601)
 time.sleep(2)
 print(collector.retrieve_option_chain())

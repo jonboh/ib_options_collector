@@ -102,7 +102,7 @@ class optchain_subscriber(object):
             for i in range(0, len(self.floatsub)):
                 self.subscribe_strikelist(self.floatsub_id[i], self.floatsub[i])
             while not self.exit_trigger:
-                time.sleep(0.5)  # just wait for the exit trigger
+                time.sleep(0.25)  # just wait for the exit trigger
             self.exit()
             return
 
@@ -139,3 +139,6 @@ class optchain_subscriber(object):
                 # print("Cancel Sub SKIPPED")
                 pass
         a=1
+
+    def unsub_underlying(self):
+        self.clientObj.cancelMktData_cust(0, self.under_reqId)
