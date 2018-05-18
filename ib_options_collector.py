@@ -35,7 +35,7 @@ class ib_option_collector(object):
         self.subscriberObj = subscriber_impl.optchain_subscriber(self.clientObj, self.subscription_limit)
         # Connection
         self.clientObj.connect("127.0.0.1", self.twsport, self.client_number)
-        client_thread = Thread(target=self.__client_runner, name='IB Client Runner')
+        client_thread = Thread(target=self.clientObj.run, name='IB Client Runner')
         client_thread.start()
         while not self.clientObj.isConnected():
             time.sleep(1)
@@ -66,16 +66,6 @@ class ib_option_collector(object):
         while not self.wrapperObj.info_request_dict[info_req_id]:
             time.sleep(1)
 
-    def __client_runner(self):
-        self.clientObj.run()
-
-    def __subscriber_runner(self):
-        if self.subscriberObj.sub_exists:
-            self.subscriberObj.run()
-        else:
-            print('No Subscription Configuration in the Subscriber Object')
-            raise ValueError
-
     def change_subscription(self, expiration):
         # CONTRACTS
         self.opt_gen_contract = contract.Contract()
@@ -91,11 +81,10 @@ class ib_option_collector(object):
 
         self.run_subscription()
 
-
     def run_subscription(self):
         self.subscriberObj.define_subscription(self.under_price_ticker, self.opt_gen_contract, [],
                                                self.wrapperObj.expiration_strikes, self.sub_float)
-        self.subscription_thread = Thread(target=self.__subscriber_runner, name='Subscription Runner')
+        self.subscription_thread = Thread(target=self.subscriberObj.run, name='Subscription Runner')
         self.subscription_thread.start()
 
     def clear_all_subscriptions(self):
