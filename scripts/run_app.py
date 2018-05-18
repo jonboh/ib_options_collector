@@ -12,7 +12,7 @@ underlying.exchange = "SMART"
 underlying.secType = "STK"
 underlying.currency = "USD"
 
-collector = col.ib_option_collector()
+collector = col.OptionsCollector()
 collector.subscription(underlying, 20180525)
 
 time.sleep(2)

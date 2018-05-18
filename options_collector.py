@@ -9,7 +9,7 @@ import wrapper_impl
 from ibapi import contract
 
 
-class ib_option_collector(object):
+class OptionsCollector:
     def __init__(self, sub_limit=90, sub_float=10, twsport=7496,
                  client_id=1):
         # CONNECTION SETTINGS
@@ -30,17 +30,17 @@ class ib_option_collector(object):
             time.sleep(1)
         print('CONNECTED')
 
-    def request_generic_info(self):
+    def request_generic_info(self, underlyingcontract):
         # Request Option Chain Details for Underlying
-        info_req_id = self.clientObj.reqSecDefOptParams_cust(0, self.underlyingcontract.symbol, "",
-                                                             self.underlyingcontract.secType,
-                                                             self.underlyingcontract.conId)
+        info_req_id = self.clientObj.reqSecDefOptParams_cust(0, underlyingcontract.symbol, "",
+                                                             underlyingcontract.secType,
+                                                             underlyingcontract.conId)
         # Wait for the request to be filled
         while not self.wrapperObj.info_request_dict[info_req_id]:
             time.sleep(0.25)
 
-    def request_chain_info(self):
-        info_req_id = self.clientObj.reqContractDetails_cust(0, self.opt_gen_contract)
+    def request_chain_info(self, opt_gen_contract):
+        info_req_id = self.clientObj.reqContractDetails_cust(0, opt_gen_contract)
         # Wait for the request to be filled
         while not self.wrapperObj.info_request_dict[info_req_id]:
             time.sleep(0.25)
@@ -57,17 +57,8 @@ class ib_option_collector(object):
         self.opt_gen_contract.currency = self.underlyingcontract.currency
         self.opt_gen_contract.multiplier = "100"
 
-        # CONTRACTS
-        self.opt_gen_contract = contract.Contract()
-        self.opt_gen_contract.symbol = self.underlyingcontract.symbol
-        self.opt_gen_contract.lastTradeDateOrContractMonth = expiration
-        self.opt_gen_contract.secType = "OPT"
-        self.opt_gen_contract.exchange = "SMART"
-        self.opt_gen_contract.currency = self.underlyingcontract.currency
-        self.opt_gen_contract.multiplier = "100"
-
-        self.request_chain_info()
-        self.request_generic_info()
+        self.request_generic_info(self.underlyingcontract)
+        self.request_chain_info(self.opt_gen_contract)
 
         self._run_subscription()
 
