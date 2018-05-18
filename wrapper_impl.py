@@ -41,7 +41,10 @@ class EWrapper(wrapper.EWrapper):
 
     def price_table_get_indexed(self, index, column):
         with self.lock:
-            return self._price_table.loc[index, column]
+            try:
+                return self._price_table.loc[index, column]
+            except:
+                return False
 
     def price_table_set(self, index, column, value):
         with self.lock:
@@ -49,9 +52,12 @@ class EWrapper(wrapper.EWrapper):
 
     def price_table_ticker(self, reqId):
         with self.lock:
-            tickerId_bool = self._price_table.reqId == reqId
-            tickerId_index = tickerId_bool[tickerId_bool].index
-            return tickerId_index
+            try:
+                tickerId_bool = self._price_table.reqId == reqId
+                tickerId_index = tickerId_bool[tickerId_bool].index
+            except:
+                tickerId_index = -1
+        return tickerId_index
 
     # def price_table_sort(self):
     #     with self.lock:
@@ -77,24 +83,26 @@ class EWrapper(wrapper.EWrapper):
                   attrib: TickAttrib):
         super().tickPrice(reqId, tickType, price, attrib)
         indexor = self.price_table_ticker(reqId)
-        if tickType == 1:
-            if price != -1:
-                self.price_table_set(indexor, 'Bid', price)
-            else:
-                self.price_table_set(indexor, 'Bid', 0)
-        elif tickType == 2:
-            self.price_table_set(indexor, 'Ask', price)
-        elif tickType == 4:
-            self.price_table_set(indexor, 'Last', price)
-        self.price_table_set(indexor, 'RefreshDate', datetime.datetime.now())
+        if indexor != -1:
+            if tickType == 1:
+                if price != -1:
+                    self.price_table_set(indexor, 'Bid', price)
+                else:
+                    self.price_table_set(indexor, 'Bid', 0)
+            elif tickType == 2:
+                self.price_table_set(indexor, 'Ask', price)
+            elif tickType == 4:
+                self.price_table_set(indexor, 'Last', price)
+            self.price_table_set(indexor, 'RefreshDate', datetime.datetime.now())
 
     def tickString(self, reqId: TickerId, tickType: TickType, value: str):
         super().tickString(reqId, tickType, value)
-        if tickType == 59:  # IB Dividends
-            indexor = self.price_table_ticker(reqId)
-            div_list = value.split(',')
-            self.price_table_set(indexor, 'CashDivDate', div_list[-2])
-            self.price_table_set(indexor, 'CashDiv', float(div_list[-1]))
+        indexor = self.price_table_ticker(reqId)
+        if indexor != -1:
+            if tickType == 59:  # IB Dividends
+                div_list = value.split(',')
+                self.price_table_set(indexor, 'CashDivDate', div_list[-2])
+                self.price_table_set(indexor, 'CashDiv', float(div_list[-1]))
 
     def tickOptionComputation(self, reqId: TickerId, tickType: TickType,
                               impliedVol: float, delta: float, optPrice: float, pvDividend: float,
@@ -103,12 +111,13 @@ class EWrapper(wrapper.EWrapper):
         super().tickOptionComputation(reqId, tickType, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta,
                                       undPrice)
         indexor = self.price_table_ticker(reqId)
-        if tickType == 10:
-            self.price_table_set(indexor, 'BidVol', impliedVol)
-        elif tickType == 11:
-            self.price_table_set(indexor, 'AskVol', impliedVol)
-        self.price_table_set(indexor, 'RefreshDate', datetime.datetime.now())
-        self.price_table_set(indexor, 'CashDiv', pvDividend)
+        if indexor != -1:
+            if tickType == 10:
+                self.price_table_set(indexor, 'BidVol', impliedVol)
+            elif tickType == 11:
+                self.price_table_set(indexor, 'AskVol', impliedVol)
+            self.price_table_set(indexor, 'RefreshDate', datetime.datetime.now())
+            self.price_table_set(indexor, 'CashDiv', pvDividend)
 
     def securityDefinitionOptionParameter(self, reqId: int, exchange: str,
                                           underlyingConId: int, tradingClass: str, multiplier: str,

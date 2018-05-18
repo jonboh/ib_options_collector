@@ -42,7 +42,7 @@ class optchain_subscriber(object):
                 group_indexor = 0
         self.sub_exists = True
 
-    def run(self):
+    def run(self): # Subscriber Runner
         self.active = True
         self.exit_trigger = False
         # Initialize permanent subscription
@@ -135,6 +135,8 @@ class optchain_subscriber(object):
         for i in range(0, len(ticker_ids)):
             if self.clientObj.wrapper.price_table_get_indexed(ticker_ids[i], 'Active'):
                 self.clientObj.cancelMktData_cust(0, ticker_ids[i])
+
             else:
                 # print("Cancel Sub SKIPPED")
                 pass
+        a=1

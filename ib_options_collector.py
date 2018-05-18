@@ -42,8 +42,8 @@ class ib_option_collector(object):
         print('CONNECTED')
         self.request_generic_info()
         self.request_chain_info()
-        self.run()
         print("Options Collector execution complete. Collection currently running...")
+        self.run()
 
     def request_generic_info(self):
         # Request Option Chain Details for Underlying
@@ -90,6 +90,13 @@ class ib_option_collector(object):
 
     def retrieve_option_chain(self):
         return self.wrapperObj.price_table_get()
+
+    def disconnect_chain(self):
+        self.subscriberObj.exit_trigger = True
+        while self.subscriberObj.active:
+            time.sleep(0.5)
+        a = 1
+
 
     def destroy(self):
         self.clientObj.disconnect()
