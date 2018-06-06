@@ -14,6 +14,7 @@ class EWrapper(wrapper.EWrapper):
     def __init__(self):
         super().__init__()
         self.lock = threading.RLock()
+        self.last_contract_details = ContractDetails()
         self.available_strikes = []
         self.expiration_strikes = []
         self.available_expirations = []
@@ -142,6 +143,7 @@ class EWrapper(wrapper.EWrapper):
     def contractDetails(self, reqId: int, contractDetails: ContractDetails):
         super().contractDetails(reqId, contractDetails)
         with self.lock:
+            self.last_contract_details = contractDetails
             self.expiration_strikes.append(contractDetails.summary.strike)
 
     def contractDetailsEnd(self, reqId: int):
