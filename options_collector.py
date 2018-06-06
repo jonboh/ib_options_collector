@@ -39,6 +39,9 @@ class OptionsCollector:
         while not self.wrapperObj.info_request_dict[info_req_id]:
             time.sleep(0.25)
 
+    def request_contract_info(self, contract):
+        self.request_chain_info(contract) # temporary fix for bad naming
+
     def request_chain_info(self, opt_gen_contract):
         info_req_id = self.clientObj.reqContractDetails_cust(0, opt_gen_contract)
         # Wait for the request to be filled
